@@ -6,11 +6,41 @@ import TextField from "@mui/material/TextField";
 import { Button } from "@mui/material";
 import Typography from "@mui/material/Typography";
 
+// データ型の定義
+interface ChatCompletion {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: Choice[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  system_fingerprint: null | string;
+}
+
+interface Choice {
+  index: number;
+  message: {
+    role: string;
+    content: string;
+  };
+  logprobs: null;
+  finish_reason: string;
+}
+
 function App() {
   const [base64_1, setBase64_1] = useState("");
+  const [base64_2, setBase64_2] = useState("");
+  const [base64_3, setBase64_3] = useState("");
+
   const [apikey, setApikey] = useState("");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [response, setResponse] = useState("");
+
+  const handleFileChange1 = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -18,6 +48,80 @@ function App() {
         setBase64_1(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange2 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        setBase64_2(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange3 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        setBase64_3(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const fetchOpenAi = async () => {
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apikey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4-vision-preview",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "I will now show you the product images.Please classify the image into the following categories.・PET bottles・Fabric products・Blister pack・box・Pouches, bags・Cans, bottles・Shrink packaging・Others not applicable to the above",
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: base64_1,
+                  },
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: base64_2,
+                  },
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: base64_3,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 300,
+        }),
+      });
+      const data: ChatCompletion = await res.json();
+      console.log(data);
+      // setResponse(JSON.stringify(data, null, 2));
+      setResponse(data.choices[0].message.content);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setResponse("Failed to fetch data");
     }
   };
 
@@ -39,24 +143,52 @@ function App() {
         <text>{apikey}</text>
         <Typography>写真1を選択</Typography>
         <div>
-          <input type="file" onChange={handleFileChange} />
-          {base64_1 && <img src={base64_1} alt="Uploaded" />}
+          <input type="file" onChange={handleFileChange1} />
+          <Box
+            component="img"
+            sx={{
+              height: 200, // ここで画像の高さを設定
+              width: 200, // ここで画像の幅を設定
+            }}
+            alt="Base64 Encoded"
+            src={base64_1}
+          ></Box>
         </div>
+
         <Typography>写真2を選択</Typography>
         <div>
-          <input type="file" onChange={handleFileChange} />
-          {/* {base64_1 && <img src={base64_1} alt="Uploaded" />} */}
+          <input type="file" onChange={handleFileChange2} />
+          <Box
+            component="img"
+            sx={{
+              height: 200, // ここで画像の高さを設定
+              width: 200, // ここで画像の幅を設定
+            }}
+            alt="Base64 Encoded"
+            src={base64_2}
+          ></Box>
         </div>
+
         <Typography>写真3を選択</Typography>
         <div>
-          <input type="file" onChange={handleFileChange} />
-          {/* {base64_1 && <img src={base64_1} alt="Uploaded" />} */}
+          <input type="file" onChange={handleFileChange3} />
+          <Box
+            component="img"
+            sx={{
+              height: 200, // ここで画像の高さを設定
+              width: 200, // ここで画像の幅を設定
+            }}
+            alt="Base64 Encoded"
+            src={base64_3}
+          ></Box>
         </div>
-        <Typography>命令を入力</Typography>
-        https://nice-mud-054e49010.4.azurestaticapps.net/
-        <TextField id="outlined-basic" label="api-key" variant="outlined" />
-        <Button variant="contained">Send Request</Button>
+        <Typography>gpt-4-vision-preview</Typography>
+        <Button variant="contained" onClick={fetchOpenAi}>
+          Send Request
+        </Button>
       </Box>
+      <Typography>Vision Answer</Typography>
+      {response}
     </>
   );
 }
