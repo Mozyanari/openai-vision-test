@@ -38,7 +38,8 @@ function App() {
 
   const [apikey, setApikey] = useState("");
 
-  const [response, setResponse] = useState("");
+  const [visionresponse, setVisionResponse] = useState("");
+  const [jsonresponse, setJsonResponse] = useState("");
 
   const handleFileChange1 = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
@@ -118,10 +119,64 @@ function App() {
       const data: ChatCompletion = await res.json();
       console.log(data);
       // setResponse(JSON.stringify(data, null, 2));
-      setResponse(data.choices[0].message.content);
+      setVisionResponse(data.choices[0].message.content);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setResponse("Failed to fetch data");
+      setVisionResponse("Failed to fetch data");
+    }
+  };
+
+  const fetchOpenAiJson = async () => {
+    try {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apikey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo-1106",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: [
+                {
+                  type: "text",
+                  text: `You are a helpful assistant designed to output JSON.
+                  The text we are about to pass is the text that someone would have created after looking at the image and categorizing the products as shown below.
+                  ・PET bottles
+                  ・Fabric products
+                  ・Blister pack
+                  ・box
+                  ・Pouches, bags
+                  ・Cans, bottles
+                  ・Shrink packaging
+                  ・Others not applicable to the above
+              
+                  You can read the text, look at the image, and give us a response in the Json format below.
+                  ### output
+                  {
+                      objectType:
+                  }`,
+                },
+              ],
+            },
+            {
+              role: "user",
+              content: visionresponse,
+            },
+          ],
+          max_tokens: 300,
+        }),
+      });
+      const data: ChatCompletion = await res.json();
+      console.log(data);
+      // setResponse(JSON.stringify(data, null, 2));
+      setJsonResponse(data.choices[0].message.content);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setJsonResponse("Failed to fetch data");
     }
   };
 
@@ -188,7 +243,14 @@ function App() {
         </Button>
       </Box>
       <Typography>Vision Answer</Typography>
-      {response}
+      {visionresponse}
+
+      <Typography>gpt-3.5-turbo-1106</Typography>
+      <Button variant="contained" onClick={fetchOpenAiJson}>
+        Send Request
+      </Button>
+      <Typography>Json Answer</Typography>
+      {jsonresponse}
     </>
   );
 }
