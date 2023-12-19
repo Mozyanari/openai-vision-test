@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "./logo.svg";
+// import logo from "./logo.svg";
 import "./App.css";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -40,7 +40,7 @@ function App() {
         <Typography>写真1を選択</Typography>
         <div>
           <input type="file" onChange={handleFileChange} />
-          {/* {base64_1 && <img src={base64_1} alt="Uploaded" />} */}
+          {base64_1 && <img src={base64_1} alt="Uploaded" />}
         </div>
         <Typography>写真2を選択</Typography>
         <div>
@@ -53,6 +53,7 @@ function App() {
           {/* {base64_1 && <img src={base64_1} alt="Uploaded" />} */}
         </div>
         <Typography>命令を入力</Typography>
+        https://nice-mud-054e49010.4.azurestaticapps.net/
         <TextField id="outlined-basic" label="api-key" variant="outlined" />
         <Button variant="contained">Send Request</Button>
       </Box>
